@@ -8,17 +8,27 @@
 #include "Visualization.h"
 #include <string.h>
 
-void DrawAtmosHor()
+void DrawAtmosHor(char rgba[Npic * Ny][Npic * Nx][3]) /////////////////////////////
 {
    GLfloat  CellRed, CellGreen, CellBlue;
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
-   for (int i = 0; i < Nx; i++) {
-      for (int j = 0; j < Ny; j++) {
+   for (int i = 0; i < Nx; i++)
+   {
+      for (int j = 0; j < Ny; j++)
+      {
          CellRed = CellBlue = CellGreen = 1.f;
          if (AtmosVx[i][j] < -0.0005) { CellRed = 1 + 20.f * AtmosVx[i][j]; CellBlue = 1.f;  CellGreen = CellRed; }
          if (AtmosVx[i][j] > 0.0005) { CellBlue = 1 - 20.f * AtmosVx[i][j]; CellRed = 1.f;  CellGreen = CellBlue; }
+
+         for (int jj = 0; jj < Npic; jj++)
+         {
+            for (int ii = 0; ii < Npic; ii++)
+            {
+               rgba[Npic * j + jj][Npic * i + ii][0] = 255 * CellBlue; rgba[Npic * j + jj][Npic * i + ii][1] = 255 * CellGreen; rgba[Npic * j + jj][Npic * i + ii][2] = 255 * CellRed;
+            }
+         }
 
          glColor3f(CellRed, CellGreen, CellBlue);
          glBegin(GL_QUADS);
@@ -29,9 +39,25 @@ void DrawAtmosHor()
          glEnd();
       }
    }
-   glutSwapBuffers();
 
+   glLineWidth(1.);
+   glColor3f(0.0, 0.0, 0.0);
+   for (int i = 10; i < Nx; i = i + 10) 
+   {
+      for (int j = 10; j < Ny; j = j + 10) 
+      {
+         glBegin(GL_LINES);
+         glVertex3f(i, j, 0.);
+         glVertex3f(i + 500 * AtmosVx[i][j], j + 500 * AtmosVy[i][j], 0);
+         glEnd();
+         DrawLine(Npic * (i + 0.5), Npic * (j + 0.5), Npic * (i + 0.5 + 500 * AtmosVx[i][j]), Npic * (j + 0.5 + 500 * AtmosVy[i][j]), rgba);
+      }
+   }
+   glutSwapBuffers();
 }
+
+
+
 
 void DrawAtmosVer()
 {
@@ -52,6 +78,17 @@ void DrawAtmosVer()
          glVertex3f(i + 1, j + 1, 0.0);
          glVertex3f(i + 1, j, 0.0);
          glEnd();
+      }
+   }
+   glLineWidth(1.);
+   glColor3f(0.0, 0.0, 0.0);
+   for (int i = 10; i < Nx; i = i + 10) {
+      for (int j = 10; j < Ny; j = j + 10) {
+         glBegin(GL_LINES);
+         glVertex3f(i, j, 0.);
+         glVertex3f(i + 500 * AtmosVx[i][j], j + 500 * AtmosVy[i][j], 0);
+         glEnd();
+         //DrawLine(Npic * (i + 0.5), Npic * (j + 0.5), Npic * (i + 0.5 + 500 * AtmosVx[i][j]), Npic * (j + 0.5 + 500 * AtmosVy[i][j]), rgba);
       }
    }
    glutSwapBuffers();

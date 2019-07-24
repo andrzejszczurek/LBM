@@ -7,13 +7,18 @@
 #include<string.h>
 #include <iostream>
 #include <fstream>
+
 #include "LBM0.h"
 
 void Initialize();
 void DrawLBM1();
 void DrawLBM2();
-void DrawAtmosHor();
+void DrawAtmosHor(char rgba[Npic * Ny][Npic * Nx][3]);
 void DrawAtmosVer();
 void Timer(int value);
+
+void BMPout(char[Npic * Ny][Npic * Nx][3], char[10]);
+void DrawLine(int x0, int y0, int x1, int y1, char rgbp[Npic * Ny][Npic * Nx][3]);
+
 
 #endif // !Visualization_h

@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#define Npic 3	// magnification
+
 #define Nx 256	// horizontal size of the space
 #define Ny 256	// vertical size of the space
 #define tauAtmos 1.0f	// relaxation time constant

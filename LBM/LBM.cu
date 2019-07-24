@@ -33,10 +33,11 @@ int mainLBM(bool FirstCycle)
       //for (int i = 0; i < npasses; i++) { infile >> timecycle[i]; }
       //infile.close();
 
-      npasses = 100;
+      ipass = 0;
+      npasses = 10;
       for (int i = 0; i < npasses; i++)
       {
-         timecycle[i] = 10;
+         timecycle[i] = 1;
       }
 
       return 0;
