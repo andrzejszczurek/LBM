@@ -25,6 +25,9 @@ static void TimeEvent(int te) /////////////////////////////////////////////////
 
 int main(int argc, char** argv) ///////////////////////////////////////////////
 {
+   int a;
+   std::cin >> a;
+
    // Initialization
    glutInit(&argc, argv);
    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);

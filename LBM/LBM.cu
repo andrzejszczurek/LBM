@@ -9,6 +9,7 @@
 #include "LBM0.h"
 #include "Visualization.h"
 #include "LBM_Atmos.h"
+#include "BC.h"
 
 
 std::fstream infile;	// file with input data
@@ -21,6 +22,10 @@ int mainLBM(bool FirstCycle)
    using namespace std;
    dim3 block(8, 8, 1); // it could be different
    dim3 grid(Nx / block.x, Ny / block.y, 1);
+
+   dim3 gridX(1, Nx / block.y, 1);
+   dim3 gridY(1, Ny / block.y, 1);
+
    if (FirstCycle)
    {
       FirstCycle = false;
@@ -34,10 +39,10 @@ int mainLBM(bool FirstCycle)
       //infile.close();
 
       ipass = 0;
-      npasses = 10;
+      npasses = 100;
       for (int i = 0; i < npasses; i++)
       {
-         timecycle[i] = 1;
+         timecycle[i] = 1.0f/5;
       }
 
       return 0;
@@ -52,6 +57,13 @@ int mainLBM(bool FirstCycle)
 
          StreamingAtmos << < grid, block >> > ();
          cudaDeviceSynchronize();
+
+         BoundaryEast << < gridX, block >> > ();
+         BoundaryWest << < gridX, block >> > ();
+         BoundarySouth << < gridY, block >> > ();
+         BoundaryNord << < gridY, block >> > ();
+         cudaDeviceSynchronize();
+
          timem += stept; timev += stept;
       }
       { timev = 0.0f; ipass++; }

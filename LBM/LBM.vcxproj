@@ -87,6 +87,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BC.h" />
     <ClInclude Include="LBM0.h" />
     <ClInclude Include="LBM_Atmos.h" />
     <ClInclude Include="Visualization.h" />
