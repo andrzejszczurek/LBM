@@ -10,6 +10,7 @@
 #include "Visualization.h"
 #include "LBM_Atmos.h"
 #include "BC.h"
+#include "Obstacles.h"
 
 
 std::fstream infile;	// file with input data
@@ -26,11 +27,14 @@ int mainLBM(bool FirstCycle)
    dim3 gridX(1, Nx / block.y, 1);
    dim3 gridY(1, Ny / block.y, 1);
 
+   int Nob = 10;
+
    if (FirstCycle)
    {
       FirstCycle = false;
       InitialAtmos << < grid, block >> > ();
       cudaDeviceSynchronize();
+      Nob = InitialObstacles();
       timem = 0.0f; timev = 0.0f;
 
       //infile.open("Schedule.txt", ios::in);
@@ -53,6 +57,9 @@ int mainLBM(bool FirstCycle)
       {
          stept = 0.01;	// time step
          EquiRelaxAtmos << < grid, block >> > ();
+         cudaDeviceSynchronize();
+
+         Obstacles << < gridY, block >> > (Nob);
          cudaDeviceSynchronize();
 
          StreamingAtmos << < grid, block >> > ();
