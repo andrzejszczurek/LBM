@@ -54,4 +54,8 @@ __global__ void StreamingAtmos();
 __global__ void EquiRelaxAtmos();
 int mainLBM(bool FirstCycle);
 
+void OutRes();
+
+void InRes();
+
 #endif

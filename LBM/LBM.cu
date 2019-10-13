@@ -11,6 +11,7 @@
 #include "LBM_Atmos.h"
 #include "BC.h"
 #include "Obstacles.h"
+#include "Temperature.h"
 
 
 std::fstream infile;	// file with input data
@@ -37,18 +38,16 @@ int mainLBM(bool FirstCycle)
       if (!newSim)
       {
           newSim = false;
-          std::fstream ResultsOut;
-          ResultsOut.open("ResultsOut.txt", std::ios::in);
-          for (int i = 0; i < Nx; i++) {
-              for (int j = 0; j < Ny; j++) {
-                  ResultsOut >> AtmosRho[i][j] >> AtmosVx[i][j] >> AtmosVy[i][j];	// read data
-              }
-          }
-          ResultsOut.close();
+          InRes();
       }
       obstaclesI = InitialObstacles();
       InitialAtmos << < grid, block >> > (newSim);
+      InitialTempG << < grid, block >> > ();
       cudaDeviceSynchronize();
+      //EnergySourceX << < gridX, block >> > ();
+      //EnergySourceY << < gridY, block >> > ();
+      //cudaDeviceSynchronize();
+
       timem = 0.0f; 
       timev = 0.0f;
 
@@ -76,19 +75,31 @@ int mainLBM(bool FirstCycle)
          EquiRelaxAtmos << < grid, block >> > ();
          cudaDeviceSynchronize();
 
+         EquiRelaxTempG << < grid, block >> > ();
          cudaDeviceSynchronize();
 
+         /*EnergySourceX << < gridX, block >> > ();
+         EnergySourceY << < gridY, block >> > ();
+         cudaDeviceSynchronize();*/
+
          StreamingAtmos << < grid, block >> > ();
+         StreamingTempG << < grid, block >> > ();
          cudaDeviceSynchronize();
 
          BoundaryEast << < gridX, block >> > ();
          BoundaryWest << < gridX, block >> > ();
          BoundarySouth << < gridY, block >> > ();
          BoundaryNord << < gridY, block >> > ();
-
          cudaDeviceSynchronize();
 
-         Obstacles << < gridY, block >> > (obstaclesI);
+         dim3 gridOb(1, obstaclesI + 2 / block.y, 1);
+         Obstacles << < gridOb, block >> > (obstaclesI);
+         cudaDeviceSynchronize();
+
+         BoundaryEastTemp << < gridX, block >> > ();
+         BoundaryWestTemp << < gridX, block >> > ();
+         BoundarySouthTemp << < gridY, block >> > ();
+         BoundaryNordTemp << < gridY, block >> > ();
          cudaDeviceSynchronize();
 
          timem += stept; 
@@ -99,15 +110,32 @@ int mainLBM(bool FirstCycle)
    if (ipass >= npasses) 
    { 
        // zapis wyniku ostatniego cyklu do pliku
-       std::ofstream ResultsOut;
-       ResultsOut.open("ResultsOut.txt", ios::out | ios::trunc);
-       for (int i = 0; i < Nx; i++) {
-           for (int j = 0; j < Ny; j++) {
-               ResultsOut << AtmosRho[i][j] << "    " << AtmosVx[i][j] << "    " << AtmosVy[i][j] << endl;
-           }
-       }
-       ResultsOut.close();
+       OutRes();
        return 1;
    };	// exit if it is the last cycle
    return 0;
+}
+
+void OutRes()
+{
+    std::ofstream ResultsOut;
+    ResultsOut.open("ResultsOut.txt", std::ios::out | std::ios::trunc);
+    for (int i = 0; i < Nx; i++) {
+        for (int j = 0; j < Ny; j++) {
+            ResultsOut << AtmosRho[i][j] << "    " << AtmosVx[i][j] << "    " << AtmosVy[i][j] << std::endl;
+        }
+    }
+    ResultsOut.close();
+}
+
+void InRes()
+{
+    std::fstream ResultsOut;
+    ResultsOut.open("ResultsOut.txt", std::ios::in);
+    for (int i = 0; i < Nx; i++) {
+        for (int j = 0; j < Ny; j++) {
+            ResultsOut >> AtmosRho[i][j] >> AtmosVx[i][j] >> AtmosVy[i][j];	// read data
+        }
+    }
+    ResultsOut.close();
 }

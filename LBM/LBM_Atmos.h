@@ -10,6 +10,34 @@
 #include <iostream>
 #include <fstream>
 #include "Obstacles.h"
+#include "Temperature.h"
+
+void DrawTempG(char rgba[Ny][Nx][3])
+{
+    GLfloat  CellRed, CellGreen, CellBlue; //bez Nx i Ny!
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    for (int i = 0; i < Nx; i++)
+    {
+        for (int j = 0; j < Ny; j++)
+        {
+            CellRed = Temp[i][j]; CellGreen = 0.0f; CellBlue = 1.0f - CellRed;
+            //rgba[j][i][0] = 255 * CellBlue; rgba[j][i][1] = 255 * CellGreen; rgba[j][i][2] = 255 * CellRed;
+
+            glColor3f(CellRed, CellGreen, CellBlue);
+            glBegin(GL_QUADS);
+            glVertex3f(i, j, 0.0f);
+            glVertex3f(i, j + 1, 0.0f);
+            glVertex3f(i + 1, j + 1, 0.0f);
+            glVertex3f(i + 1, j, 0.0f);
+            glEnd();
+        }
+    }
+    glutSwapBuffers();
+}
+
 
 
 void DrawAtmosHor(char rgba[Npic * Ny][Npic * Nx][3])
@@ -82,64 +110,65 @@ void DrawAtmosHor(char rgba[Npic * Ny][Npic * Nx][3])
 
 void DrawAtmosVer(char rgba[Npic * Ny][Npic * Nx][3])
 {
-   GLfloat  CellRed, CellGreen, CellBlue;
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
-   for (int i = 0; i < Nx; i++) 
-   {
-      for (int j = 0; j < Ny; j++) 
-      {
-         CellRed = CellBlue = CellGreen = 1.f;
-         if (AtmosVy[i][j] < -0.0002)
-         { 
-             CellRed = 1 + 20.f * AtmosVy[i][j];
-             CellBlue = 1.f;
-             CellGreen = CellRed; 
-         }
-         if (AtmosVy[i][j] > 0.0002)
-         {
-             CellBlue = 1 - 20.f * AtmosVy[i][j];
-             CellRed = 1.f;
-             CellGreen = CellBlue;
-         }
+    DrawTempG(NULL);
+    //GLfloat  CellRed, CellGreen, CellBlue;
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glMatrixMode(GL_MODELVIEW);
+    //glLoadIdentity();
+    //for (int i = 0; i < Nx; i++)
+    //{
+    //    for (int j = 0; j < Ny; j++)
+    //    {
+    //        CellRed = CellBlue = CellGreen = 1.f;
+    //        if (AtmosVy[i][j] < -0.0002)
+    //        {
+    //            CellRed = 1 + 20.f * AtmosVy[i][j];
+    //            CellBlue = 1.f;
+    //            CellGreen = CellRed;
+    //        }
+    //        if (AtmosVy[i][j] > 0.0002)
+    //        {
+    //            CellBlue = 1 - 20.f * AtmosVy[i][j];
+    //            CellRed = 1.f;
+    //            CellGreen = CellBlue;
+    //        }
 
-         // rysowanie przegrody
-         if (AtmosState[i][j] == 1)
-             CellBlue = CellGreen = CellRed = .1;
+    //        // rysowanie przegrody
+    //        if (AtmosState[i][j] == 1)
+    //            CellBlue = CellGreen = CellRed = .1;
 
-         // kształtowanie zmiennych rgba - potrzebnych do zapisy wyniku jako bitmapa
-         for (int jj = 0; jj < Npic; jj++)
-         {
-             for (int ii = 0; ii < Npic; ii++)
-             {
-                 rgba[Npic * j + jj][Npic * i + ii][0] = 255 * CellBlue;
-                 rgba[Npic * j + jj][Npic * i + ii][1] = 255 * CellGreen;
-                 rgba[Npic * j + jj][Npic * i + ii][2] = 255 * CellRed;
-             }
-         }
+    //        // kształtowanie zmiennych rgba - potrzebnych do zapisy wyniku jako bitmapa
+    //        for (int jj = 0; jj < Npic; jj++)
+    //        {
+    //            for (int ii = 0; ii < Npic; ii++)
+    //            {
+    //                rgba[Npic * j + jj][Npic * i + ii][0] = 255 * CellBlue;
+    //                rgba[Npic * j + jj][Npic * i + ii][1] = 255 * CellGreen;
+    //                rgba[Npic * j + jj][Npic * i + ii][2] = 255 * CellRed;
+    //            }
+    //        }
 
-         glColor3f(CellRed, CellGreen, CellBlue);
-         glBegin(GL_QUADS);
-         glVertex3f(i, j, 0.0);
-         glVertex3f(i, j + 1, 0.0);
-         glVertex3f(i + 1, j + 1, 0.0);
-         glVertex3f(i + 1, j, 0.0);
-         glEnd();
-      }
-   }
-   glLineWidth(1.);
-   glColor3f(0.0, 0.0, 0.0);
-   for (int i = 10; i < Nx; i = i + 10) {
-      for (int j = 10; j < Ny; j = j + 10) {
-         glBegin(GL_LINES);
-         glVertex3f(i, j, 0.);
-         glVertex3f(i + 500 * AtmosVx[i][j], j + 500 * AtmosVy[i][j], 0);
-         glEnd();
-         DrawLine(Npic * (i + 0.5), Npic * (j + 0.5), Npic * (i + 0.5 + 500 * AtmosVx[i][j]), Npic * (j + 0.5 + 500 * AtmosVy[i][j]), rgba);
-      }
-   }
-   glutSwapBuffers();
+    //        glColor3f(CellRed, CellGreen, CellBlue);
+    //        glBegin(GL_QUADS);
+    //        glVertex3f(i, j, 0.0);
+    //        glVertex3f(i, j + 1, 0.0);
+    //        glVertex3f(i + 1, j + 1, 0.0);
+    //        glVertex3f(i + 1, j, 0.0);
+    //        glEnd();
+    //    }
+    //}
+    //glLineWidth(1.);
+    //glColor3f(0.0, 0.0, 0.0);
+    //for (int i = 10; i < Nx; i = i + 10) {
+    //    for (int j = 10; j < Ny; j = j + 10) {
+    //        glBegin(GL_LINES);
+    //        glVertex3f(i, j, 0.);
+    //        glVertex3f(i + 500 * AtmosVx[i][j], j + 500 * AtmosVy[i][j], 0);
+    //        glEnd();
+    //        DrawLine(Npic * (i + 0.5), Npic * (j + 0.5), Npic * (i + 0.5 + 500 * AtmosVx[i][j]), Npic * (j + 0.5 + 500 * AtmosVy[i][j]), rgba);
+    //    }
+    //}
+    //glutSwapBuffers();
 }
 
 __global__ void InitialAtmos(bool NewSim)

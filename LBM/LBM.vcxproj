@@ -91,6 +91,7 @@
     <ClInclude Include="LBM0.h" />
     <ClInclude Include="LBM_Atmos.h" />
     <ClInclude Include="Obstacles.h" />
+    <ClInclude Include="Temperature.h" />
     <ClInclude Include="Visualization.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
