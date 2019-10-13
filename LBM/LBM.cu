@@ -17,6 +17,8 @@ std::fstream infile;	// file with input data
 float timev;			// real time from cycle beginning
 int npasses, ipass;		// number of cycles and cycle number
 float timecycle[40];		//duration of cycle
+static bool newSim = true;
+int obstaclesI = 0;
 
 int mainLBM(bool FirstCycle)
 {
@@ -24,29 +26,44 @@ int mainLBM(bool FirstCycle)
    dim3 block(8, 8, 1); // it could be different
    dim3 grid(Nx / block.x, Ny / block.y, 1);
 
+   // dal warunków brzegowych
    dim3 gridX(1, Nx / block.y, 1);
    dim3 gridY(1, Ny / block.y, 1);
-
-   int Nob = 10;
 
    if (FirstCycle)
    {
       FirstCycle = false;
-      InitialAtmos << < grid, block >> > ();
+
+      if (!newSim)
+      {
+          newSim = false;
+          std::fstream ResultsOut;
+          ResultsOut.open("ResultsOut.txt", std::ios::in);
+          for (int i = 0; i < Nx; i++) {
+              for (int j = 0; j < Ny; j++) {
+                  ResultsOut >> AtmosRho[i][j] >> AtmosVx[i][j] >> AtmosVy[i][j];	// read data
+              }
+          }
+          ResultsOut.close();
+      }
+      obstaclesI = InitialObstacles();
+      InitialAtmos << < grid, block >> > (newSim);
       cudaDeviceSynchronize();
-      Nob = InitialObstacles();
-      timem = 0.0f; timev = 0.0f;
+      timem = 0.0f; 
+      timev = 0.0f;
 
       //infile.open("Schedule.txt", ios::in);
       //infile >> npasses; ipass = 0;	// read number of cycles
-      //for (int i = 0; i < npasses; i++) { infile >> timecycle[i]; }
+      //for (int i = 0; i < npasses; i++) { infile >> timecycle[i]; }j
+
       //infile.close();
 
+      // alternatywa dla cykli z pliku
       ipass = 0;
-      npasses = 100;
+      npasses = 150;
       for (int i = 0; i < npasses; i++)
       {
-         timecycle[i] = 1.0f/5;
+         timecycle[i] = 1.0f/4;
       }
 
       return 0;
@@ -59,7 +76,6 @@ int mainLBM(bool FirstCycle)
          EquiRelaxAtmos << < grid, block >> > ();
          cudaDeviceSynchronize();
 
-         Obstacles << < gridY, block >> > (Nob);
          cudaDeviceSynchronize();
 
          StreamingAtmos << < grid, block >> > ();
@@ -69,12 +85,29 @@ int mainLBM(bool FirstCycle)
          BoundaryWest << < gridX, block >> > ();
          BoundarySouth << < gridY, block >> > ();
          BoundaryNord << < gridY, block >> > ();
+
          cudaDeviceSynchronize();
 
-         timem += stept; timev += stept;
+         Obstacles << < gridY, block >> > (obstaclesI);
+         cudaDeviceSynchronize();
+
+         timem += stept; 
+         timev += stept;
       }
       { timev = 0.0f; ipass++; }
    }
-   if (ipass >= npasses) { return 1; };	// exit if it is the last cycle
+   if (ipass >= npasses) 
+   { 
+       // zapis wyniku ostatniego cyklu do pliku
+       std::ofstream ResultsOut;
+       ResultsOut.open("ResultsOut.txt", ios::out | ios::trunc);
+       for (int i = 0; i < Nx; i++) {
+           for (int j = 0; j < Ny; j++) {
+               ResultsOut << AtmosRho[i][j] << "    " << AtmosVx[i][j] << "    " << AtmosVy[i][j] << endl;
+           }
+       }
+       ResultsOut.close();
+       return 1;
+   };	// exit if it is the last cycle
    return 0;
 }

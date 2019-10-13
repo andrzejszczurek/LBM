@@ -5,60 +5,46 @@
 #include "Visualization.h"
 using namespace std;
 
-void Initialize()
-{
-   glClearColor(0.0, 0.0, 0.0, 1.0);
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   glOrtho(-10, Nx + 10, -10, Ny + 10, -200.0, 200.0);
-   glMatrixMode(GL_MODELVIEW);
-}
-
-void Timer(int value)
-{
-   glColor3f(1.0, 1.0, 1.0);
-   glutPostRedisplay();
-   glutTimerFunc(50, Timer, 0);
-}
 
 void BMPout(char rgbp[Npic * Ny][Npic * Nx][3], char* bmpfile)
 {
-   const int width = Npic * Nx;
-   const int height = Npic * Ny;
-   using namespace std;
-   FILE* pFile = fopen(bmpfile, "wb"); // wb -> w: writable b: binary, open as writable and binary
-   if (pFile == NULL) { return; }
+    const int width = Npic * Nx;
+    const int height = Npic * Ny;
+    using namespace std;
+    FILE* pFile = fopen(bmpfile, "wb"); // wb -> w: writable b: binary
+    if (pFile == NULL)
+        return;
 
-   BITMAPINFOHEADER BMIH;                         // BMP header
-   BMIH.biSizeImage = width * height * 3;
-   // Create the bitmap for this OpenGL context
-   BMIH.biSize = sizeof(BITMAPINFOHEADER);
-   BMIH.biWidth = width;
-   BMIH.biHeight = height;
-   BMIH.biPlanes = 1;
-   BMIH.biBitCount = 24;
-   BMIH.biCompression = BI_RGB;
-   BMIH.biSizeImage = width * height * 3;
+    BITMAPINFOHEADER BMIH;
+    BMIH.biSizeImage = width * height * 3;
+    // Create the bitmap for this OpenGL context
+    BMIH.biSize = sizeof(BITMAPINFOHEADER);
+    BMIH.biWidth = width;
+    BMIH.biHeight = height;
+    BMIH.biPlanes = 1;
+    BMIH.biBitCount = 24;
+    BMIH.biCompression = BI_RGB;
+    BMIH.biSizeImage = width * height * 3;
 
-   BITMAPFILEHEADER bmfh;                         // Other BMP header
-   int nBitsOffset = sizeof(BITMAPFILEHEADER) + BMIH.biSize;
-   LONG lImageSize = BMIH.biSizeImage;
-   LONG lFileSize = nBitsOffset + lImageSize;
-   bmfh.bfType = 'B' + ('M' << 8);
-   bmfh.bfOffBits = nBitsOffset;
-   bmfh.bfSize = lFileSize;
-   bmfh.bfReserved1 = bmfh.bfReserved2 = 0;
+    BITMAPFILEHEADER bmfh;
+    int nBitsOffset = sizeof(BITMAPFILEHEADER) + BMIH.biSize;
+    LONG lImageSize = BMIH.biSizeImage;
+    LONG lFileSize = nBitsOffset + lImageSize;
+    bmfh.bfType = 'B' + ('M' << 8);
+    bmfh.bfOffBits = nBitsOffset;
+    bmfh.bfSize = lFileSize;
+    bmfh.bfReserved1 = bmfh.bfReserved2 = 0;
 
-   // Write the bitmap file header               // Saving the first header to file
-   UINT nWrittenFileHeaderSize = fwrite(&bmfh, 1, sizeof(BITMAPFILEHEADER), pFile);
+    // Write the bitmap file header               // Saving the first header to file
+    UINT nWrittenFileHeaderSize = fwrite(&bmfh, 1, sizeof(BITMAPFILEHEADER), pFile);
 
-   // And then the bitmap info header            // Saving the second header to file
-   UINT nWrittenInfoHeaderSize = fwrite(&BMIH, 1, sizeof(BITMAPINFOHEADER), pFile);
+    // And then the bitmap info header            // Saving the second header to file
+    UINT nWrittenInfoHeaderSize = fwrite(&BMIH, 1, sizeof(BITMAPINFOHEADER), pFile);
 
-   // Finally, write the image data itself
-   //-- the data represents our drawing          // Saving the file content in lpBits to file
-   UINT nWrittenDIBDataSize = fwrite(rgbp, 1, lImageSize, pFile);
-   fclose(pFile); // closing the file.
+    // Finally, write the image data itself
+    //-- the data represents our drawing          // Saving the file content in lpBits to file
+    UINT nWrittenDIBDataSize = fwrite(rgbp, 1, lImageSize, pFile);
+    fclose(pFile); // closing the file.
 }
 
 
@@ -109,3 +95,4 @@ void DrawLine(int x0, int y0, int x1, int y1, char rgbp[Npic * Ny][Npic * Nx][3]
       }
    }
 }
+

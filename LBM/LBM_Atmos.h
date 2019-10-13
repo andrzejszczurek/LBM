@@ -1,4 +1,4 @@
-#include "cuda_runtime.h"
+﻿#include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include <math.h>
 #include <stdio.h>
@@ -7,10 +7,14 @@
 #include "LBM0.h"
 #include "Visualization.h"
 #include <string.h>
+#include <iostream>
+#include <fstream>
+#include "Obstacles.h"
 
-void DrawAtmosHor(char rgba[Npic * Ny][Npic * Nx][3]) /////////////////////////////
+
+void DrawAtmosHor(char rgba[Npic * Ny][Npic * Nx][3])
 {
-   GLfloat  CellRed, CellGreen, CellBlue;
+   GLfloat CellRed, CellGreen, CellBlue;
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
@@ -19,16 +23,34 @@ void DrawAtmosHor(char rgba[Npic * Ny][Npic * Nx][3]) //////////////////////////
       for (int j = 0; j < Ny; j++)
       {
          CellRed = CellBlue = CellGreen = 1.f;
-         if (AtmosVx[i][j] < -0.0005) { CellRed = 1 + 20.f * AtmosVx[i][j]; CellBlue = 1.f;  CellGreen = CellRed; }
-         if (AtmosVx[i][j] > 0.0005) { CellBlue = 1 - 20.f * AtmosVx[i][j]; CellRed = 1.f;  CellGreen = CellBlue; }
+         if (AtmosVx[i][j] < -0.0005) 
+         { 
+             CellRed = 1 + 20.f * AtmosVx[i][j];
+             CellBlue = 1.f;
+             CellGreen = CellRed; 
+         }
 
+         if (AtmosVx[i][j] > 0.0005) 
+         { 
+             CellBlue = 1 - 20.f * AtmosVx[i][j];
+             CellRed = 1.f;
+             CellGreen = CellBlue;
+         }
+
+         // kształtowanie zmiennych rgba - potrzebnych do zapisy wyniku jako bitmapa
          for (int jj = 0; jj < Npic; jj++)
          {
             for (int ii = 0; ii < Npic; ii++)
             {
-               rgba[Npic * j + jj][Npic * i + ii][0] = 255 * CellBlue; rgba[Npic * j + jj][Npic * i + ii][1] = 255 * CellGreen; rgba[Npic * j + jj][Npic * i + ii][2] = 255 * CellRed;
+               rgba[Npic * j + jj][Npic * i + ii][0] = 255 * CellBlue;
+               rgba[Npic * j + jj][Npic * i + ii][1] = 255 * CellGreen;
+               rgba[Npic * j + jj][Npic * i + ii][2] = 255 * CellRed;
             }
          }
+
+         // rysowanie przegrody
+         if (AtmosState[i][j] == 1)
+             CellBlue = CellGreen = CellRed = .1;
 
          glColor3f(CellRed, CellGreen, CellBlue);
          glBegin(GL_QUADS);
@@ -40,6 +62,7 @@ void DrawAtmosHor(char rgba[Npic * Ny][Npic * Nx][3]) //////////////////////////
       }
    }
 
+   // rysowanie lini toku
    glLineWidth(1.);
    glColor3f(0.0, 0.0, 0.0);
    for (int i = 10; i < Nx; i = i + 10) 
@@ -57,19 +80,44 @@ void DrawAtmosHor(char rgba[Npic * Ny][Npic * Nx][3]) //////////////////////////
 }
 
 
-
-
-void DrawAtmosVer()
+void DrawAtmosVer(char rgba[Npic * Ny][Npic * Nx][3])
 {
    GLfloat  CellRed, CellGreen, CellBlue;
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
-   for (int i = 0; i < Nx; i++) {
-      for (int j = 0; j < Ny; j++) {
+   for (int i = 0; i < Nx; i++) 
+   {
+      for (int j = 0; j < Ny; j++) 
+      {
          CellRed = CellBlue = CellGreen = 1.f;
-         if (AtmosVy[i][j] < -0.0002) { CellRed = 1 + 20.f * AtmosVy[i][j]; CellBlue = 1.f;  CellGreen = CellRed; }
-         if (AtmosVy[i][j] > 0.0002) { CellBlue = 1 - 20.f * AtmosVy[i][j]; CellRed = 1.f;  CellGreen = CellBlue; }
+         if (AtmosVy[i][j] < -0.0002)
+         { 
+             CellRed = 1 + 20.f * AtmosVy[i][j];
+             CellBlue = 1.f;
+             CellGreen = CellRed; 
+         }
+         if (AtmosVy[i][j] > 0.0002)
+         {
+             CellBlue = 1 - 20.f * AtmosVy[i][j];
+             CellRed = 1.f;
+             CellGreen = CellBlue;
+         }
+
+         // rysowanie przegrody
+         if (AtmosState[i][j] == 1)
+             CellBlue = CellGreen = CellRed = .1;
+
+         // kształtowanie zmiennych rgba - potrzebnych do zapisy wyniku jako bitmapa
+         for (int jj = 0; jj < Npic; jj++)
+         {
+             for (int ii = 0; ii < Npic; ii++)
+             {
+                 rgba[Npic * j + jj][Npic * i + ii][0] = 255 * CellBlue;
+                 rgba[Npic * j + jj][Npic * i + ii][1] = 255 * CellGreen;
+                 rgba[Npic * j + jj][Npic * i + ii][2] = 255 * CellRed;
+             }
+         }
 
          glColor3f(CellRed, CellGreen, CellBlue);
          glBegin(GL_QUADS);
@@ -88,43 +136,50 @@ void DrawAtmosVer()
          glVertex3f(i, j, 0.);
          glVertex3f(i + 500 * AtmosVx[i][j], j + 500 * AtmosVy[i][j], 0);
          glEnd();
-         //DrawLine(Npic * (i + 0.5), Npic * (j + 0.5), Npic * (i + 0.5 + 500 * AtmosVx[i][j]), Npic * (j + 0.5 + 500 * AtmosVy[i][j]), rgba);
+         DrawLine(Npic * (i + 0.5), Npic * (j + 0.5), Npic * (i + 0.5 + 500 * AtmosVx[i][j]), Npic * (j + 0.5 + 500 * AtmosVy[i][j]), rgba);
       }
    }
    glutSwapBuffers();
 }
 
-__global__ void InitialAtmos()
+__global__ void InitialAtmos(bool NewSim)
 {
-   unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-   unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
-   // Initial density and velocity, equilibrium and input distribution functions 
-   if (x == 0 || x == Nx - 1 || y == 0 || y == Ny - 1) {
-      AtmosVx[x][y] = (1.0f * y / Ny) * 0.05; // velocity from 0 to 0.05
-   }
-   else { AtmosVx[x][y] = 0.0f; }
-   AtmosVy[x][y] = 0.0f;
-   AtmosRho[x][y] = 1.0f;
+    unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+    // Initial density and velocity, equilibrium and input distribution functions 
 
-   float vx2 = AtmosVx[x][y] * AtmosVx[x][y];
-   float vy2 = AtmosVy[x][y] * AtmosVy[x][y];
-   float eu2 = 1.f - 1.5f * (vx2 + vy2);
-   float Rho36 = AtmosRho[x][y] / 36.0f;
-   Atmoseq[x][y].fC = 16.0f * Rho36 * eu2;
-   Atmoseq[x][y].fN = 4.0f * Rho36 * (eu2 + 3.0f * AtmosVy[x][y] + 4.5f * vy2);
-   Atmoseq[x][y].fE = 4.0f * Rho36 * (eu2 + 3.0f * AtmosVx[x][y] + 4.5f * vx2);
-   Atmoseq[x][y].fS = 4.0f * Rho36 * (eu2 - 3.0f * AtmosVy[x][y] + 4.5f * vy2);
-   Atmoseq[x][y].fW = 4.0f * Rho36 * (eu2 - 3.0f * AtmosVx[x][y] + 4.5f * vx2);
-   Atmoseq[x][y].fNE = Rho36 * (eu2 + 3.0f * (AtmosVx[x][y] + AtmosVy[x][y]) + 4.5f * (AtmosVx[x][y] + AtmosVy[x][y]) * (AtmosVx[x][y] + AtmosVy[x][y]));
-   Atmoseq[x][y].fSE = Rho36 * (eu2 + 3.0f * (AtmosVx[x][y] - AtmosVy[x][y]) + 4.5f * (AtmosVx[x][y] - AtmosVy[x][y]) * (AtmosVx[x][y] - AtmosVy[x][y]));
-   Atmoseq[x][y].fSW = Rho36 * (eu2 + 3.0f * (-AtmosVx[x][y] - AtmosVy[x][y]) + 4.5f * (AtmosVx[x][y] + AtmosVy[x][y]) * (AtmosVx[x][y] + AtmosVy[x][y]));
-   Atmoseq[x][y].fNW = Rho36 * (eu2 + 3.0f * (-AtmosVx[x][y] + AtmosVy[x][y]) + 4.5f * (-AtmosVx[x][y] + AtmosVy[x][y]) * (-AtmosVx[x][y] + AtmosVy[x][y]));
+    if (NewSim)
+    {
+        if (x == 0 || x == Nx - 1 || y == 0 || y == Ny - 1) {
+            AtmosVx[x][y] = (1.0f * y / Ny) * 0.05; // velocity from 0 to 0.05
+        }
+        else
+        {
+            AtmosVx[x][y] = 0.0f;
+        }
+        AtmosVy[x][y] = 0.0f;
+        AtmosRho[x][y] = 1.0f;
+    }
 
-   Atmosin[x][y].fC = Atmoseq[x][y].fC;
-   Atmosin[x][y].fE = Atmoseq[x][y].fE;  Atmosin[x][y].fN = Atmoseq[x][y].fN;
-   Atmosin[x][y].fS = Atmoseq[x][y].fS;  Atmosin[x][y].fW = Atmoseq[x][y].fW;
-   Atmosin[x][y].fNE = Atmoseq[x][y].fNE; Atmosin[x][y].fNW = Atmoseq[x][y].fNW;
-   Atmosin[x][y].fSE = Atmoseq[x][y].fSE; Atmosin[x][y].fSW = Atmoseq[x][y].fSW;
+    float vx2 = AtmosVx[x][y] * AtmosVx[x][y];
+    float vy2 = AtmosVy[x][y] * AtmosVy[x][y];
+    float eu2 = 1.f - 1.5f * (vx2 + vy2);
+    float Rho36 = AtmosRho[x][y] / 36.0f;
+    Atmoseq[x][y].fC = 16.0f * Rho36 * eu2;
+    Atmoseq[x][y].fN = 4.0f * Rho36 * (eu2 + 3.0f * AtmosVy[x][y] + 4.5f * vy2);
+    Atmoseq[x][y].fE = 4.0f * Rho36 * (eu2 + 3.0f * AtmosVx[x][y] + 4.5f * vx2);
+    Atmoseq[x][y].fS = 4.0f * Rho36 * (eu2 - 3.0f * AtmosVy[x][y] + 4.5f * vy2);
+    Atmoseq[x][y].fW = 4.0f * Rho36 * (eu2 - 3.0f * AtmosVx[x][y] + 4.5f * vx2);
+    Atmoseq[x][y].fNE = Rho36 * (eu2 + 3.0f * (AtmosVx[x][y] + AtmosVy[x][y]) + 4.5f * (AtmosVx[x][y] + AtmosVy[x][y]) * (AtmosVx[x][y] + AtmosVy[x][y]));
+    Atmoseq[x][y].fSE = Rho36 * (eu2 + 3.0f * (AtmosVx[x][y] - AtmosVy[x][y]) + 4.5f * (AtmosVx[x][y] - AtmosVy[x][y]) * (AtmosVx[x][y] - AtmosVy[x][y]));
+    Atmoseq[x][y].fSW = Rho36 * (eu2 + 3.0f * (-AtmosVx[x][y] - AtmosVy[x][y]) + 4.5f * (AtmosVx[x][y] + AtmosVy[x][y]) * (AtmosVx[x][y] + AtmosVy[x][y]));
+    Atmoseq[x][y].fNW = Rho36 * (eu2 + 3.0f * (-AtmosVx[x][y] + AtmosVy[x][y]) + 4.5f * (-AtmosVx[x][y] + AtmosVy[x][y]) * (-AtmosVx[x][y] + AtmosVy[x][y]));
+
+    Atmosin[x][y].fC = Atmoseq[x][y].fC;
+    Atmosin[x][y].fE = Atmoseq[x][y].fE;  Atmosin[x][y].fN = Atmoseq[x][y].fN;
+    Atmosin[x][y].fS = Atmoseq[x][y].fS;  Atmosin[x][y].fW = Atmoseq[x][y].fW;
+    Atmosin[x][y].fNE = Atmoseq[x][y].fNE; Atmosin[x][y].fNW = Atmoseq[x][y].fNW;
+    Atmosin[x][y].fSE = Atmoseq[x][y].fSE; Atmosin[x][y].fSW = Atmoseq[x][y].fSW;
 }
 
 __global__ void EquiRelaxAtmos()

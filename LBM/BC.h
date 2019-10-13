@@ -16,39 +16,61 @@
 
 __global__ void BoundaryEast()
 {
-   int y = threadIdx.y + blockIdx.y * blockDim.y;
+    int y = threadIdx.y + blockIdx.y * blockDim.y;
 
-   Atmosin[Nx - 1][y].fC = Atmosout[Nx - 1][y].fC;
-   Atmosin[Nx - 1][y].fE = Atmosout[Nx - 2][y].fE;
+    Atmosin[Nx - 1][y].fC = Atmosout[Nx - 1][y].fC;
+    Atmosin[Nx - 1][y].fE = Atmosout[Nx - 2][y].fE;
 
-   if (y < Ny - 1) { Atmosin[Nx - 1][y].fS = Atmosout[Nx - 1][y + 1].fS; Atmosin[Nx - 1][y].fSE = Atmosout[Nx - 2][y + 1].fSE; }
-   else { Atmosin[Nx - 1][y].fS = Atmosout[Nx - 1][y - 1].fN; Atmosin[Nx - 1][y].fSE = Atmosout[Nx - 2][y - 1].fNE; }
-   if (y > 0) { Atmosin[Nx - 1][y].fN = Atmosout[Nx - 1][y - 1].fN; Atmosin[Nx - 1][y].fNE = Atmosout[Nx - 2][y - 1].fNE; }
-   else { Atmosin[Nx - 1][y].fN = Atmosout[Nx - 1][y + 1].fS; Atmosin[Nx - 1][y].fNE = Atmosout[Nx - 2][y + 1].fSE; }
+    if (y < Ny - 1)
+    {
+        Atmosin[Nx - 1][y].fS = Atmosout[Nx - 1][y + 1].fS;
+        Atmosin[Nx - 1][y].fSE = Atmosout[Nx - 2][y + 1].fSE;
+    }
+    else
+    {
+        Atmosin[Nx - 1][y].fS = Atmosout[Nx - 1][y - 1].fN;
+        Atmosin[Nx - 1][y].fSE = Atmosout[Nx - 2][y - 1].fNE;
+    }
 
-   int BoundaryCode = BoundaryCEast;
-   float RhoExit, Ux, Uy;
-   switch (BoundaryCode)
-   {
-   case 1:	////////////////// bounce-back
-      Atmosin[Nx - 1][y].fW = Atmosin[Nx - 1][y].fE; Atmosin[Nx - 1][y].fSW = Atmosin[Nx - 1][y].fNE; Atmosin[Nx - 1][y].fNW = Atmosin[Nx - 1][y].fSE;
-      return;
-   case 2:	////////////////// symmetry
-      Atmosin[Nx - 1][y].fW = Atmosin[Nx - 1][y].fE; Atmosin[Nx - 1][y].fSW = Atmosin[Nx - 1][y].fSE; Atmosin[Nx - 1][y].fNW = Atmosin[Nx - 1][y].fNE;
-      return;
-   case 3:	////////////////// velosity
-      Ux = 0.02, Uy = 0.0;
-      RhoExit = (Atmosin[Nx - 1][y].fC + Atmosin[Nx - 1][y].fS + Atmosin[Nx - 1][y].fN + 2.0 * (Atmosin[Nx - 1][y].fE + Atmosin[Nx - 1][y].fSE + Atmosin[Nx - 1][y].fNE)) / (1.0 + Ux);
-      break;
-   case 4:	///////////////// open (rho)
-      RhoExit = 1.0; Uy = 0.0;
-      Ux = (Atmosin[Nx - 1][y].fC + Atmosin[Nx - 1][y].fS + Atmosin[Nx - 1][y].fN + 2.0 * (Atmosin[Nx - 1][y].fE + Atmosin[Nx - 1][y].fSE + Atmosin[Nx - 1][y].fNE)) / RhoExit - 1.0;
-      break;
-   }
-   Uy = 6.f * (Atmosin[Nx - 1][y].fN - Atmosin[Nx - 1][y].fS + Atmosin[Nx - 1][y].fNE - Atmosin[Nx - 1][y].fSE) / RhoExit / (5 - 3 * Ux);
-   Atmosin[Nx - 1][y].fW = Atmosin[Nx - 1][y].fE - 2.0 / 3.0 * Ux * RhoExit;
-   Atmosin[Nx - 1][y].fSW = Atmosin[Nx - 1][y].fNE - (Ux - Uy) / 6.0 * RhoExit;
-   Atmosin[Nx - 1][y].fNW = Atmosin[Nx - 1][y].fSE - (Ux + Uy) / 6.0 * RhoExit;
+    if (y > 0)
+    {
+        Atmosin[Nx - 1][y].fN = Atmosout[Nx - 1][y - 1].fN;
+        Atmosin[Nx - 1][y].fNE = Atmosout[Nx - 2][y - 1].fNE;
+    }
+    else
+    {
+        Atmosin[Nx - 1][y].fN = Atmosout[Nx - 1][y + 1].fS;
+        Atmosin[Nx - 1][y].fNE = Atmosout[Nx - 2][y + 1].fSE;
+    }
+
+    int BoundaryCode = BoundaryCEast;
+    float RhoExit, Ux, Uy;
+    switch (BoundaryCode)
+    {
+    case 1:	////////////////// bounce-back
+        Atmosin[Nx - 1][y].fW = Atmosin[Nx - 1][y].fE;
+        Atmosin[Nx - 1][y].fSW = Atmosin[Nx - 1][y].fNE;
+        Atmosin[Nx - 1][y].fNW = Atmosin[Nx - 1][y].fSE;
+        return;
+    case 2:	////////////////// symmetry
+        Atmosin[Nx - 1][y].fW = Atmosin[Nx - 1][y].fE;
+        Atmosin[Nx - 1][y].fSW = Atmosin[Nx - 1][y].fSE;
+        Atmosin[Nx - 1][y].fNW = Atmosin[Nx - 1][y].fNE;
+        return;
+    case 3:	////////////////// velosity
+        Ux = 0.02, Uy = 0.0;
+        RhoExit = (Atmosin[Nx - 1][y].fC + Atmosin[Nx - 1][y].fS + Atmosin[Nx - 1][y].fN + 2.0 * (Atmosin[Nx - 1][y].fE + Atmosin[Nx - 1][y].fSE + Atmosin[Nx - 1][y].fNE)) / (1.0 + Ux);
+        break;
+    case 4:	///////////////// open (rho)
+        RhoExit = 1.0; Uy = 0.0;
+        Ux = (Atmosin[Nx - 1][y].fC + Atmosin[Nx - 1][y].fS + Atmosin[Nx - 1][y].fN + 2.0 * (Atmosin[Nx - 1][y].fE + Atmosin[Nx - 1][y].fSE + Atmosin[Nx - 1][y].fNE)) / RhoExit - 1.0;
+        break;
+    }
+    Uy = 6.f * (Atmosin[Nx - 1][y].fN - Atmosin[Nx - 1][y].fS + Atmosin[Nx - 1][y].fNE - Atmosin[Nx - 1][y].fSE) / RhoExit / (5 - 3 * Ux);
+
+    Atmosin[Nx - 1][y].fW = Atmosin[Nx - 1][y].fE - 2.0 / 3.0 * Ux * RhoExit;
+    Atmosin[Nx - 1][y].fSW = Atmosin[Nx - 1][y].fNE - (Ux - Uy) / 6.0 * RhoExit;
+    Atmosin[Nx - 1][y].fNW = Atmosin[Nx - 1][y].fSE - (Ux + Uy) / 6.0 * RhoExit;
 }
 
 __global__ void BoundaryWest()

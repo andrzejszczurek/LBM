@@ -5,20 +5,53 @@
 #include <stdio.h>
 #include <math.h>
 
-#define Npic 3	// magnification
+// Powiększenie (na potrzeby zapisu do pliku)
+#define Npic 3	
 
-#define Nx 256	// horizontal size of the space
-#define Ny 256	// vertical size of the space
-#define tauAtmos 1.0f	// relaxation time constant
+// Poziomy rozmiar przestrzeni
+#define Nx 256
 
-extern __device__ __managed__  float timem, stept; // overall time, time step
-struct Dist { float fC, fE, fW, fS, fN, fSE, fSW, fNE, fNW; }; // distribution function D2Q9
-extern __device__ __managed__  float AtmosRho[Nx][Ny]; // density
-extern __device__ __managed__  float AtmosVx[Nx][Ny], AtmosVy[Nx][Ny]; // horizontal and vertical velocities
-extern __device__ __managed__  Dist  Atmosin[Nx][Ny], Atmosout[Nx][Ny], Atmoseq[Nx][Ny]; // input, output and equilibrium distribution functions
+// Pionowy rozmiar przestrzeni
+#define Ny 256
 
-__global__ void InitialAtmos();
+// Stała czasowa relaksacji
+#define tauAtmos 1.0f
+
+// Całkowity czas
+extern __device__ __managed__ float timem;
+
+// Krok czasu
+extern __device__ __managed__ float stept;
+
+// Funkcji dyskrybucji (rozkładu??) D2Q9
+struct Dist 
+{ 
+    float fC;
+    float fE;
+    float fW; 
+    float fS; 
+    float fN;
+    float fSE;
+    float fSW;
+    float fNE;
+    float fNW;
+};
+
+// Tablica gęstości
+extern __device__ __managed__  float AtmosRho[Nx][Ny];
+
+// Tablica poziomych prędkości
+extern __device__ __managed__  float AtmosVx[Nx][Ny];
+
+// Tablica pionowych prędkości
+extern __device__ __managed__  float AtmosVy[Nx][Ny];
+
+// input, output and equilibrium distribution functions
+extern __device__ __managed__ Dist Atmosin[Nx][Ny], Atmosout[Nx][Ny], Atmoseq[Nx][Ny]; 
+
+__global__ void InitialAtmos(bool NewSim);
 __global__ void StreamingAtmos();
 __global__ void EquiRelaxAtmos();
 int mainLBM(bool FirstCycle);
-#endif // LBM0_h
+
+#endif
