@@ -27,7 +27,7 @@ extern __device__ __managed__ float timem;
 // Krok czasu
 extern __device__ __managed__ float stept;
 
-// Funkcji dyskrybucji (rozkładu??) D2Q9
+// Funkcja rozkładu D2Q9
 struct Dist 
 { 
     float fC;

@@ -7,50 +7,52 @@
 void KeyboardEsc(unsigned char key, int x, int y);
 void Timer(int value);
 void Initialize();
-void DrawLBM1();
-void DrawLBM2();
+void DrawLBM_Vy();
+void DrawLBM_Vx();
+void DrawLBM_Temp();
+void TimeEvent(int te);
 
-int WinId, win1, win2;
+int WinId;
+int win_vy;
+int win_vx;
+int win_temp;
 bool FirstCycle = true;
 bool LastCycle = false;
 int icycle = 0;
 
-static void TimeEvent(int te) /////////////////////////////////////////////////
+
+int main(int argc, char** argv)
 {
-   glutSetWindow(win1);
-   glutPostRedisplay();
-
-   glutSetWindow(win2);
-   glutPostRedisplay();
-
-   glutTimerFunc(10, TimeEvent, 1);  // Reset our timer.
-}
-
-
-int main(int argc, char** argv) ///////////////////////////////////////////////
-{
-   int a;
-   std::cin >> a;
-
-   // Initialization
+   // ogólna konfiguracja okien
    glutInit(&argc, argv);
    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
    glutInitWindowSize(768, 768);
-   glutInitWindowPosition(0, 20);
    glutTimerFunc(10, TimeEvent, 1);
-   glutTimerFunc(50, Timer, 0);
-   win1 = glutCreateWindow("LBM-CUDA [Vy]");
-   // Registration
-   glutDisplayFunc(DrawLBM1);
+   //glutTimerFunc(50, Timer, 0);
+
+   // okno dla składowej y prędkości
+   glutInitWindowPosition(0, 20);
+   win_vy = glutCreateWindow("LBM-CUDA [Vy]");
+   glutDisplayFunc(DrawLBM_Vy);
    Initialize();
+
+   // okno dla składowej x prędkości
    glutInitWindowPosition(768, 20);
-   win2 = glutCreateWindow("LBM-CUDA [Vx]");
-   glutDisplayFunc(DrawLBM2);
+   win_vx = glutCreateWindow("LBM-CUDA [Vx]");
+   glutDisplayFunc(DrawLBM_Vx);
    Initialize();
+
+   // okno dla rozkładu temperatury
+   glutInitWindowPosition(1536, 20);
+   win_temp = glutCreateWindow("LBM-CUDA [Temp]");
+   glutDisplayFunc(DrawLBM_Temp);
+   Initialize();
+
    glutKeyboardFunc(KeyboardEsc);
    glutMainLoop();
    return 0;
 }
+
 
 void Initialize()
 {
@@ -62,6 +64,20 @@ void Initialize()
     //glutTimerFunc(50, Timer, 0);
 }
 
+static void TimeEvent(int te)
+{
+    glutSetWindow(win_vy);
+    glutPostRedisplay();
+
+    glutSetWindow(win_vx);
+    glutPostRedisplay();
+
+    glutSetWindow(win_temp);
+    glutPostRedisplay();
+
+    glutTimerFunc(10, TimeEvent, 1);  // Reset our timer.
+}
+
 void Timer(int value)
 {
     glColor3f(1.0, 1.0, 1.0);
@@ -69,7 +85,7 @@ void Timer(int value)
     glutTimerFunc(50, Timer, 0);
 }
 
-void KeyboardEsc(unsigned char key, int x, int y) //////////////////////
+void KeyboardEsc(unsigned char key, int x, int y)
 {
    switch (key)
    {
@@ -81,7 +97,7 @@ void KeyboardEsc(unsigned char key, int x, int y) //////////////////////
    glutPostRedisplay();
 }
 
-void DrawLBM1() /////////////////////////////////////////////////////////
+void DrawLBM_Vy()
 {
    auto rgb = new char[Npic * Ny][Npic * Nx][3];
    if (mainLBM(FirstCycle) == 1) LastCycle = true;
@@ -94,7 +110,12 @@ void DrawLBM1() /////////////////////////////////////////////////////////
    FirstCycle = false;
 }
 
-void DrawLBM2() ///////////////////////////////////////////////////////
+void DrawLBM_Temp()
+{
+    DrawTempG(NULL);
+}
+
+void DrawLBM_Vx()
 {
    auto rgb = new char[Npic * Ny][Npic * Nx][3];
    if (mainLBM(FirstCycle) == 1) LastCycle = true;
