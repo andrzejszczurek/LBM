@@ -12,6 +12,7 @@
 #include "BC.h"
 #include "Obstacles.h"
 #include "Temperature.h"
+#include "EnergySource.h"
 
 
 std::fstream infile;	// file with input data
@@ -44,9 +45,9 @@ int mainLBM(bool FirstCycle)
       InitialAtmos << < grid, block >> > (newSim);
       InitialTempG << < grid, block >> > ();
       cudaDeviceSynchronize();
-      //EnergySourceX << < gridX, block >> > ();
-      //EnergySourceY << < gridY, block >> > ();
-      //cudaDeviceSynchronize();
+      EnergySourceX << < gridX, block >> > ();
+      EnergySourceY << < gridY, block >> > ();
+      cudaDeviceSynchronize();
 
       timem = 0.0f; 
       timev = 0.0f;
@@ -62,7 +63,7 @@ int mainLBM(bool FirstCycle)
       npasses = 150;
       for (int i = 0; i < npasses; i++)
       {
-         timecycle[i] = 1.0f/4;
+         timecycle[i] = 1.0f/6;
       }
 
       return 0;
@@ -78,9 +79,9 @@ int mainLBM(bool FirstCycle)
          EquiRelaxTempG << < grid, block >> > ();
          cudaDeviceSynchronize();
 
-         /*EnergySourceX << < gridX, block >> > ();
+         EnergySourceX << < gridX, block >> > ();
          EnergySourceY << < gridY, block >> > ();
-         cudaDeviceSynchronize();*/
+         cudaDeviceSynchronize();
 
          StreamingAtmos << < grid, block >> > ();
          StreamingTempG << < grid, block >> > ();

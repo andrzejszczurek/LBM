@@ -5,6 +5,10 @@
 #include <stdio.h>
 #include <math.h>
 
+
+// Grawitacja
+#define grav 0.000025f
+
 // Powiększenie (na potrzeby zapisu do pliku)
 #define Npic 3	
 
