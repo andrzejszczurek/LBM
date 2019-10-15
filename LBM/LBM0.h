@@ -12,6 +12,9 @@
 #define BoundaryCNord 3
 #define BoundaryCSouth 1
 
+// czy uwzględniać grawitację
+#define UseGravityMode true
+
 // Czy rysować linie toku
 #define DrawLines true;
 

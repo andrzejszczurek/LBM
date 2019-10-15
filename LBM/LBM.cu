@@ -25,12 +25,15 @@ int obstaclesI = 0;
 int mainLBM(bool FirstCycle)
 {
    using namespace std;
-   dim3 block(1, 8, 1); // it could be different
+   dim3 block(8, 8, 1); // it could be different
    dim3 grid(Nx / block.x, Ny / block.y, 1);
 
    // dla warunków brzegowych
    dim3 gridX(1, Nx / block.y, 1);
    dim3 gridY(1, Ny / block.y, 1);
+
+   // przeszkody
+   dim3 gridOb(1, obstaclesI + 2 / block.y, 1);
 
    if (FirstCycle)
    {
@@ -42,12 +45,13 @@ int mainLBM(bool FirstCycle)
           InRes();
       }
       obstaclesI = InitialObstacles();
-      InitialAtmos <<< grid, block >>>(newSim);
-      InitialTempG << < grid, block >> > ();
+      InitialAtmos<<<grid, block>>>(newSim);
+      InitialTempG<<<grid, block>>>();
       cudaDeviceSynchronize();
-      //EnergySourceX << < gridX, block >> > ();
-      //EnergySourceY << < gridY, block >> > ();
-      //cudaDeviceSynchronize();
+
+      EnergySourceX <<<gridX, block>>>();
+      EnergySourceY <<<gridY, block>>>();
+      cudaDeviceSynchronize();
 
       timem = 0.0f; 
       timev = 0.0f;
@@ -73,33 +77,32 @@ int mainLBM(bool FirstCycle)
       while ((timev < timecycle[ipass]) && (ipass < npasses))
       {
          stept = 0.01;	// time step
-         EquiRelaxAtmos << < grid, block >> > ();
+         EquiRelaxAtmos<<<grid, block>>>();
          cudaDeviceSynchronize();
-         EquiRelaxTempG << < grid, block >> > ();
-         cudaDeviceSynchronize();
-
-         //EnergySourceX << < gridX, block >> > ();
-         //EnergySourceY << < gridY, block >> > ();
-         //cudaDeviceSynchronize();
-
-         StreamingAtmos << < grid, block >> > ();
-         StreamingTempG << < grid, block >> > ();
+         EquiRelaxTempG<<<grid, block>>>();
          cudaDeviceSynchronize();
 
-         BoundaryEast << < gridX, block >> > ();
-         BoundaryWest << < gridX, block >> > ();
-         BoundarySouth << < gridY, block >> > ();
-         BoundaryNord << < gridY, block >> > ();
+         EnergySourceX<<<gridX, block>>>();
+         EnergySourceY<<<gridY, block>>>();
          cudaDeviceSynchronize();
 
-         /*dim3 gridOb(1, obstaclesI + 2 / block.y, 1);
-         Obstacles << < gridOb, block >> > (obstaclesI);
-         cudaDeviceSynchronize();*/
+         StreamingAtmos<<<grid, block>>>();
+         StreamingTempG<<<grid, block>>>();
+         cudaDeviceSynchronize();
 
-         BoundaryEastTemp << < gridX, block >> > ();
-         BoundaryWestTemp << < gridX, block >> > ();
-         BoundarySouthTemp << < gridY, block >> > ();
-         BoundaryNordTemp << < gridY, block >> > ();
+         BoundaryEast<<<gridX, block>>>();
+         BoundaryWest<<<gridX, block>>>();
+         BoundarySouth<<<gridY, block>>>();
+         BoundaryNord<<<gridY, block>>>();
+         cudaDeviceSynchronize();
+
+         Obstacles<<<gridOb, block>>>(obstaclesI);
+         cudaDeviceSynchronize();
+
+         BoundaryEastTemp<<<gridX, block>>>();
+         BoundaryWestTemp<<<gridX, block>>>();
+         BoundarySouthTemp<<<gridY, block>>>();
+         BoundaryNordTemp<<<gridY, block>>>();
          cudaDeviceSynchronize();
 
          timem += stept; 

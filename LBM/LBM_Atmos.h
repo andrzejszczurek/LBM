@@ -107,7 +107,7 @@ void DrawAtmosHor(char rgba[Npic * Ny][Npic * Nx][3])
             glVertex3f(i, j, 0.);
             glVertex3f(i + 500 * AtmosVx[i][j], j + 500 * AtmosVy[i][j], 0);
             glEnd();
-            DrawLine(Npic * (i + 0.5), Npic * (j + 0.5), Npic * (i + 0.5 + 500 * AtmosVx[i][j]), Npic * (j + 0.5 + 500 * AtmosVy[i][j]), rgba);
+            DrawLine(Npic * (i + 0.5f), Npic * (j + 0.5), Npic * (i + 0.5f + 500 * AtmosVx[i][j]), Npic * (j + 0.5f + 500 * AtmosVy[i][j]), rgba);
          }
       }
    }
@@ -174,7 +174,7 @@ void DrawAtmosVer(char rgba[Npic * Ny][Npic * Nx][3])
                glVertex3f(i, j, 0.);
                glVertex3f(i + 500 * AtmosVx[i][j], j + 500 * AtmosVy[i][j], 0);
                glEnd();
-               DrawLine(Npic * (i + 0.5), Npic * (j + 0.5), Npic * (i + 0.5 + 500 * AtmosVx[i][j]), Npic * (j + 0.5 + 500 * AtmosVy[i][j]), rgba);
+               DrawLine(Npic * (i + 0.5f), Npic * (j + 0.5f), Npic * (i + 0.5f + 500 * AtmosVx[i][j]), Npic * (j + 0.5f + 500 * AtmosVy[i][j]), rgba);
            }
        }
     }
@@ -190,7 +190,7 @@ __global__ void InitialAtmos(bool NewSim)
    if (NewSim)
    {
       if (x == 0 || x == Nx - 1 || y == 0 || y == Ny - 1) {
-         AtmosVx[x][y] = (1.0f * y / Ny) * 0.05; // velocity from 0 to 0.05
+         AtmosVx[x][y] = (1.0f * y / Ny) * 0.05f; // velocity from 0 to 0.05
       }
       else
       {
@@ -227,14 +227,11 @@ __global__ void InitialAtmos(bool NewSim)
 
 __global__ void EquiRelaxAtmos()
 {
-   bool useGravityMod = false;
-
    int x = threadIdx.x + blockIdx.x * blockDim.x;
    int y = threadIdx.y + blockIdx.y * blockDim.y;
 
-   float gravMod = 0.f;
-   if (useGravityMod)
-      gravMod = grav * (1 - 2. * Temp[x][y]);
+   bool useGravityMod = UseGravityMode;
+   float gravMod = useGravityMod ? grav * (1 - 2. * Temp[x][y]) : 0.0f;
 
    // macroscopic density and velosity for the current cell
    AtmosRho[x][y] = Atmosin[x][y].fC + Atmosin[x][y].fE + Atmosin[x][y].fW + Atmosin[x][y].fS + Atmosin[x][y].fN + Atmosin[x][y].fNE + Atmosin[x][y].fNW + Atmosin[x][y].fSE + Atmosin[x][y].fSW;

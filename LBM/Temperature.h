@@ -1,4 +1,4 @@
-#ifndef Temperature_h
+﻿#ifndef Temperature_h
 #define Temperature_h
 #include "cuda_runtime.h"
 #include "LBM0.h"
@@ -92,150 +92,98 @@ __global__ void StreamingTempG()
 
 __global__ void BoundaryEastTemp()
 {
-    int y = threadIdx.y + blockIdx.y * blockDim.y;
-    int x = Nx - 1;
-    float TempConst = (1.0f - 1.0f * y / Ny) * .2f / 18.0f; //temperature from 0 to 0.2
-    float alphaT = 0.f;
+   int y = threadIdx.y + blockIdx.y * blockDim.y; int x = Nx - 1;
+   float TempConst = 10 * ((1.0f - 1.0f * y / Ny) * 0.1f / 18.f); //temperature from 0 to 0.2
+   float alphaT = 0.f; // 1 - stała temp, 0 - warunek symetryczny
 
-    Tin[x][y].fC = Tout[x][y].fC;
-    Tin[x][y].fE = Tout[x - 1][y].fE;
+   Tin[x][y].fC = Tout[x][y].fC;
+   Tin[x][y].fE = Tout[x - 1][y].fE;
+   if (y < Ny - 1) { Tin[x][y].fS = Tout[x][y + 1].fS; Tin[x][y].fSE = Tout[x - 1][y + 1].fSE; }
+   else { Tin[x][y].fS = Tout[x][y - 1].fN; Tin[x][y].fSE = Tout[x - 1][y - 1].fNE; }
+   if (y > 0) { Tin[x][y].fN = Tout[x][y - 1].fN; Tin[x][y].fNE = Tout[x - 1][y - 1].fNE; }
+   else { Tin[x][y].fN = Tout[x][y + 1].fS; Tin[x][y].fNE = Tout[x - 1][y + 1].fSE; }
 
-    if (y < Ny - 1)
-    {
-        Tin[x][y].fS = Tout[x][y + 1].fS;
-        Tin[x][y].fSE = Tout[x - 1][y + 1].fSE;
-    }
-    else
-    {
-        Tin[x][y].fS = Tout[x][y - 1].fN;
-        Tin[x][y].fSE = Tout[x - 1][y - 1].fNE;
-    }
+   Tin[x][y].fW = (1.f - alphaT) * Tin[x][y].fE + alphaT * (4.0f * TempConst - Tin[x][y].fE);
+   Tin[x][y].fSW = (1.f - alphaT) * Tin[x][y].fNE + alphaT * (TempConst - Tin[x][y].fNE);
+   Tin[x][y].fNW = (1.f - alphaT) * Tin[x][y].fSE + alphaT * (TempConst - Tin[x][y].fSE);
+   //return;
 
-    if (y > 0)
-    {
-        Tin[x][y].fN = Tout[x][y - 1].fN;
-        Tin[x][y].fNE = Tout[x - 1][y - 1].fNE;
-    }
-    else
-    {
-        Tin[x][y].fN = Tout[x][y + 1].fS;
-        Tin[x][y].fNE = Tout[x - 1][y + 1].fSE;
-    }
-
-    Tin[x][y].fW = (1.f - alphaT) * Tin[x][y].fE + alphaT * (4.0f * TempConst - Tin[x][y].fE);
-    Tin[x][y].fSW = (1.f - alphaT) * Tin[x][y].fNE + alphaT * (TempConst - Tin[x][y].fNE);
-    Tin[x][y].fNW = (1.f - alphaT) * Tin[x][y].fSE + alphaT * (TempConst - Tin[x][y].fSE);
-    //return;
-    Temp[x][y] = (Tin[0][y].fC + Tin[0][y].fE + Tin[0][y].fS + 2 * (Tin[0][y].fE + Tin[0][y].fNE + Tin[0][y].fSE)) / (1 - AtmosVx[0][y]);
-    Tin[0][y].fW = Tin[0][y].fE + 2.f / 3.f * Temp[0][y] * AtmosVx[0][y];
-    Tin[0][y].fNW = Tin[0][y].fNE + Temp[0][y] * AtmosVx[0][y] / 6.f;
-    Tin[0][y].fSW = Tin[0][y].fSE + Temp[0][y] * AtmosVx[0][y] / 6.f;
-    return;
+   Temp[x][y] = (Tin[0][y].fC + Tin[0][y].fN + Tin[0][y].fS + 2 * (Tin[0][y].fE + Tin[0][y].fNE + Tin[0][y].fSE)) / (1 + AtmosVx[0][y]);
+   Tin[0][y].fW = Tin[0][y].fE + 2.f / 3.f * Temp[0][y] * AtmosVx[0][y];
+   Tin[0][y].fNW = Tin[0][y].fNE + Temp[0][y] * AtmosVx[0][y] / 6.f;
+   Tin[0][y].fSW = Tin[0][y].fSE + Temp[0][y] * AtmosVx[0][y] / 6.f;
+   return;
 }
 
 __global__ void BoundaryWestTemp()
 {
-    int y = threadIdx.y + blockIdx.y * blockDim.y;
-    int x = 0;
-    float TempConst = (1.0f - 1.0f * (Ny-y) / Ny) * 0.1f / 18.f;//temperature from 0 to 0.2
-    float alphaT = 1.f;
+   int y = threadIdx.y + blockIdx.y * blockDim.y; int x = 0;
+   float TempConst = 10*((1.0f - 1.0f * y / Ny) * 0.1f / 18.f);//temperature from 0 to 0.2
+   float alphaT = 1.f;
 
-    Tin[0][y].fC = Tout[0][y].fC;
-    Tin[0][y].fW = Tout[1][y].fW;
-    if (y < Ny - 1) 
-    { 
-       Tin[0][y].fS = Tout[0][y + 1].fS;
-       Tin[0][y].fSW = Tout[1][y + 1].fSW; 
-    }
-    else 
-    { 
-       Tin[0][y].fS = Tout[0][y - 1].fN;
-       Tin[0][y].fSW = Tout[1][y - 1].fNW; 
-    }
+   Tin[0][y].fC = Tout[0][y].fC;
+   Tin[0][y].fW = Tout[1][y].fW;
+   if (y < Ny - 1) { Tin[0][y].fS = Tout[0][y + 1].fS; Tin[0][y].fSW = Tout[1][y + 1].fSW; }
+   else { Tin[0][y].fS = Tout[0][y - 1].fN; Tin[0][y].fSW = Tout[1][y - 1].fNW; }
+   if (y > 0) { Tin[0][y].fN = Tout[0][y - 1].fN; Tin[0][y].fNW = Tout[1][y - 1].fNW; }
+   else { Tin[0][y].fN = Tout[0][y + 1].fS; Tin[0][y].fNW = Tout[1][y + 1].fSW; }
 
-    if (y > 0) 
-    { 
-       Tin[0][y].fN = Tout[0][y - 1].fN;
-       Tin[0][y].fNW = Tout[1][y - 1].fNW; 
-    }
-    else 
-    { 
-       Tin[0][y].fN = Tout[0][y + 1].fS;
-       Tin[0][y].fNW = Tout[1][y + 1].fSW; 
-    }
+   Tin[0][y].fE = (1.f - alphaT) * Tin[0][y].fW + alphaT * (4.0f * TempConst - Tin[0][y].fW);
+   Tin[0][y].fNE = (1.f - alphaT) * Tin[0][y].fSW + alphaT * (TempConst - Tin[0][y].fSW);
+   Tin[0][y].fSE = (1.f - alphaT) * Tin[0][y].fNW + alphaT * (TempConst - Tin[0][y].fNW);
+   return;
 
-    Tin[0][y].fE = (1.f - alphaT) * Tin[0][y].fW + alphaT * (4.0f * TempConst - Tin[0][y].fW);
-    Tin[0][y].fNE = (1.f - alphaT) * Tin[0][y].fSW + alphaT * (TempConst - Tin[0][y].fSW);
-    Tin[0][y].fSE = (1.f - alphaT) * Tin[0][y].fNW + alphaT * (TempConst - Tin[0][y].fNW);
-    return;
+   Temp[x][y] = (Tin[0][y].fC + Tin[0][y].fN + Tin[0][y].fS + 2 * (Tin[0][y].fW + Tin[0][y].fNW + Tin[0][y].fSW)) / (1 - AtmosVx[0][y]);
+   Tin[0][y].fE = Tin[0][y].fW + 2.f / 3.f * Temp[0][y] * AtmosVx[0][y];
+   Tin[0][y].fNE = Tin[0][y].fNW + Temp[0][y] * AtmosVx[0][y] / 6.f;
+   Tin[0][y].fSE = Tin[0][y].fSW + Temp[0][y] * AtmosVx[0][y] / 6.f;
+   return;
 
-    Temp[x][y] = (Tin[0][y].fC + Tin[0][y].fN + Tin[0][y].fS + 2 * (Tin[0][y].fW + Tin[0][y].fNW + Tin[0][y].fSW)) / (1 - AtmosVx[0][y]);
-    Tin[0][y].fE = Tin[0][y].fW + 2.f / 3.f * Temp[0][y] * AtmosVx[0][y];
-    Tin[0][y].fNE = Tin[0][y].fNW + Temp[0][y] * AtmosVx[0][y] / 6.f;
-    Tin[0][y].fSE = Tin[0][y].fSW + Temp[0][y] * AtmosVx[0][y] / 6.f;
-    return;
 }
 
 __global__ void BoundarySouthTemp()
 {
-    int x = threadIdx.y + blockIdx.y * blockDim.y;
-    int y = 0;
-    float TempConst = (1.0f * x / Nx) * 1.0f / 18.0f; // temperature from 0 to 1
-    float alphaT = 0.f;
+   int x = threadIdx.y + blockIdx.y * blockDim.y; int y = 0;
+   float TempConst = (1.0f * x / Nx) * 1.0f / 18.0f; // temperature from 0 to 1
+   float alphaT = 0.f;
 
-    Tin[x][0].fC = Tout[x][0].fC;
-    Tin[x][0].fS = Tout[x][1].fS;
-    if (x < Nx - 1) 
-    {
-       Tin[x][0].fW = Tout[x + 1][0].fW;
-       Tin[x][0].fSW = Tout[x + 1][1].fSW; 
-    }
-    else { return; }
+   Tin[x][0].fC = Tout[x][0].fC;
+   Tin[x][0].fS = Tout[x][1].fS;
+   if (x < Nx - 1) { Tin[x][0].fW = Tout[x + 1][0].fW; Tin[x][0].fSW = Tout[x + 1][1].fSW; }
+   else { return; }
+   if (x > 0) { Tin[x][0].fE = Tout[x - 1][0].fE; Tin[x][0].fSE = Tout[x - 1][1].fSE; }
+   else { return; }
 
-    if (x > 0) 
-    { 
-       Tin[x][0].fE = Tout[x - 1][0].fE;
-       Tin[x][0].fSE = Tout[x - 1][1].fSE; 
-    }
-    else { return; }
+   Tin[x][0].fN = (1.f - alphaT) * Tin[x][0].fS + alphaT * (4.0f * TempConst - Tin[x][0].fS);
+   Tin[x][0].fNW = (1.f - alphaT) * Tin[x][0].fSE + alphaT * (TempConst - Tin[x][0].fSE);
+   Tin[x][0].fNE = (1.f - alphaT) * Tin[x][0].fSW + alphaT * (TempConst - Tin[x][0].fSW);
+   return;
 
-    Tin[x][0].fN = (1.f - alphaT) * Tin[x][0].fS + alphaT * (4.0f * TempConst - Tin[x][0].fS);
-    Tin[x][0].fNW = (1.f - alphaT) * Tin[x][0].fSE + alphaT * (TempConst - Tin[x][0].fSE);
-    Tin[x][0].fNE = (1.f - alphaT) * Tin[x][0].fSW + alphaT * (TempConst - Tin[x][0].fSW);
-    return;
 }
 
 __global__ void BoundaryNordTemp()
 {
-    int x = threadIdx.y + blockIdx.y * blockDim.y;
-    int y = Ny - 1;
-    float TempConst = 0.0f;
-    float alphaT = 1.f;
+   int x = threadIdx.y + blockIdx.y * blockDim.y; int y = Ny - 1;
+   float TempConst = 0.0f;
+   float alphaT = 1.f;
 
-    Tin[x][y].fC = Tout[x][y].fC;
-    Tin[x][y].fN = Tout[x][y - 1].fN;
-    if (x < Nx - 1)
-    {
-       Tin[x][y].fW = Tout[x + 1][y].fW;
-       Tin[x][y].fNW = Tout[x + 1][y - 1].fNW;
-    }
-    else { return; }
-    if (x > 0) 
-    {
-       Tin[x][y].fE = Tout[x - 1][y].fE;
-       Tin[x][y].fNE = Tout[x - 1][y - 1].fNE; 
-    }
-    else { return; }
+   Tin[x][y].fC = Tout[x][y].fC;
+   Tin[x][y].fN = Tout[x][y - 1].fN;
+   if (x < Nx - 1) { Tin[x][y].fW = Tout[x + 1][y].fW; Tin[x][y].fNW = Tout[x + 1][y - 1].fNW; }
+   else { return; }
+   if (x > 0) { Tin[x][y].fE = Tout[x - 1][y].fE; Tin[x][y].fNE = Tout[x - 1][y - 1].fNE; }
+   else { return; }
 
-    Tin[x][y].fS = (1.f - alphaT) * Tin[x][y].fN + alphaT * (4.0f * TempConst - Tin[x][y].fN);
-    Tin[x][y].fSW = (1.f - alphaT) * Tin[x][y].fNE + alphaT * (TempConst - Tin[x][y].fNE);
-    Tin[x][y].fSE = (1.f - alphaT) * Tin[x][y].fNW + alphaT * (TempConst - Tin[x][y].fNW);
-    // return
-    Temp[x][y] = (Tin[x][y].fC + Tin[x][y].fE + Tin[x][y].fW + 2 * (Tin[x][y].fN + Tin[x][y].fNW + Tin[x][y].fNE)) / (1 + AtmosVy[x][y]);
-    Tin[x][y].fS = Tin[x][y].fN - 2.f / 3.f * Temp[x][y] * AtmosVy[x][y];
-    Tin[x][y].fSE = Tin[x][y].fNE - Temp[x][y] * AtmosVy[x][y] / 6.f;
-    Tin[x][y].fSW = Tin[x][y].fNW - Temp[x][y] * AtmosVy[x][y] / 6.f;
-    return;
+   Tin[x][y].fS = (1.f - alphaT) * Tin[x][y].fN + alphaT * (4.0f * TempConst - Tin[x][y].fN);
+   Tin[x][y].fSW = (1.f - alphaT) * Tin[x][y].fNE + alphaT * (TempConst - Tin[x][y].fNE);
+   Tin[x][y].fSE = (1.f - alphaT) * Tin[x][y].fNW + alphaT * (TempConst - Tin[x][y].fNW);
+   // return
+   Temp[x][y] = (Tin[x][y].fC + Tin[x][y].fE + Tin[x][y].fW + 2 * (Tin[x][y].fN + Tin[x][y].fNW + Tin[x][y].fNE)) / (1 + AtmosVy[x][y]);
+   Tin[x][y].fS = Tin[x][y].fN - 2.f / 3.f * Temp[x][y] * AtmosVy[x][y];
+   Tin[x][y].fSE = Tin[x][y].fNE - Temp[x][y] * AtmosVy[x][y] / 6.f;
+   Tin[x][y].fSW = Tin[x][y].fNW - Temp[x][y] * AtmosVy[x][y] / 6.f;
+   return;
+
 }
 
 
