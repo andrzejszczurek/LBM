@@ -7,13 +7,6 @@
 
 #include "LBM0.h"
 
-
-#define BoundaryCEast 4 // 1- bounce-back, 2 - symmetry, 3 - velocity, 4 - rho
-#define BoundaryCWest 3
-#define BoundaryCNord 3
-#define BoundaryCSouth 1
-
-
 __global__ void BoundaryEast()
 {
    int y = threadIdx.y + blockIdx.y * blockDim.y;

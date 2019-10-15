@@ -6,6 +6,15 @@
 #include <math.h>
 
 
+// warunki brzegowe: 1 - bounce-back, 2 - symmetry, 3 - velocity, 4 - rho
+#define BoundaryCEast 4
+#define BoundaryCWest 3
+#define BoundaryCNord 3
+#define BoundaryCSouth 1
+
+// Czy rysować linie toku
+#define DrawLines true;
+
 // Grawitacja
 #define grav 0.000025f
 

@@ -94,17 +94,21 @@ void DrawAtmosHor(char rgba[Npic * Ny][Npic * Nx][3])
    }
 
    // rysowanie lini toku
-   glLineWidth(1.);
-   glColor3f(0.0, 0.0, 0.0);
-   for (int i = 10; i < Nx; i = i + 10) 
+   bool dr = DrawLines;
+   if (dr)
    {
-      for (int j = 10; j < Ny; j = j + 10) 
+      glLineWidth(1.);
+      glColor3f(0.0, 0.0, 0.0);
+      for (int i = 10; i < Nx; i = i + 10)
       {
-         glBegin(GL_LINES);
-         glVertex3f(i, j, 0.);
-         glVertex3f(i + 500 * AtmosVx[i][j], j + 500 * AtmosVy[i][j], 0);
-         glEnd();
-         DrawLine(Npic * (i + 0.5), Npic * (j + 0.5), Npic * (i + 0.5 + 500 * AtmosVx[i][j]), Npic * (j + 0.5 + 500 * AtmosVy[i][j]), rgba);
+         for (int j = 10; j < Ny; j = j + 10)
+         {
+            glBegin(GL_LINES);
+            glVertex3f(i, j, 0.);
+            glVertex3f(i + 500 * AtmosVx[i][j], j + 500 * AtmosVy[i][j], 0);
+            glEnd();
+            DrawLine(Npic * (i + 0.5), Npic * (j + 0.5), Npic * (i + 0.5 + 500 * AtmosVx[i][j]), Npic * (j + 0.5 + 500 * AtmosVy[i][j]), rgba);
+         }
       }
    }
    glutSwapBuffers();
@@ -159,16 +163,20 @@ void DrawAtmosVer(char rgba[Npic * Ny][Npic * Nx][3])
             glEnd();
         }
     }
-    glLineWidth(1.);
-    glColor3f(0.0, 0.0, 0.0);
-    for (int i = 10; i < Nx; i = i + 10) {
-        for (int j = 10; j < Ny; j = j + 10) {
-            glBegin(GL_LINES);
-            glVertex3f(i, j, 0.);
-            glVertex3f(i + 500 * AtmosVx[i][j], j + 500 * AtmosVy[i][j], 0);
-            glEnd();
-            DrawLine(Npic * (i + 0.5), Npic * (j + 0.5), Npic * (i + 0.5 + 500 * AtmosVx[i][j]), Npic * (j + 0.5 + 500 * AtmosVy[i][j]), rgba);
-        }
+    bool dr = DrawLines;
+    if (dr)
+    {
+       glLineWidth(1.);
+       glColor3f(0.0, 0.0, 0.0);
+       for (int i = 10; i < Nx; i = i + 10) {
+           for (int j = 10; j < Ny; j = j + 10) {
+               glBegin(GL_LINES);
+               glVertex3f(i, j, 0.);
+               glVertex3f(i + 500 * AtmosVx[i][j], j + 500 * AtmosVy[i][j], 0);
+               glEnd();
+               DrawLine(Npic * (i + 0.5), Npic * (j + 0.5), Npic * (i + 0.5 + 500 * AtmosVx[i][j]), Npic * (j + 0.5 + 500 * AtmosVy[i][j]), rgba);
+           }
+       }
     }
     glutSwapBuffers();
 }

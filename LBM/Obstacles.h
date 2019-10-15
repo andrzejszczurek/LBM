@@ -167,11 +167,11 @@ __global__ void Obstacles(int a_nob)
     int i = threadIdx.y + blockIdx.y * blockDim.y;
     if (i >= a_nob)
         return;
-    float muf = 1.0;  //5f;
+    float muf = .0f;  //5f;
     int x = CellO[i].x;
     int y = CellO[i].y;
-    int typ1 = CellO[i].typ1,
-        int typ2 = CellO[i].typ2;
+    int typ1 = CellO[i].typ1;
+    int typ2 = CellO[i].typ2;
 
     Atmosin[x][y].fC = Atmosout[x][y].fC;
 
